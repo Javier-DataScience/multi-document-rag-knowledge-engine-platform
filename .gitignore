@@ -18,3 +18,9 @@ data/chroma_db/
 # ChromaDB
 
 data/chroma_db/
+
+# Vector DB
+data/chroma_db/
+
+# Raw data (PDFs)
+data/
