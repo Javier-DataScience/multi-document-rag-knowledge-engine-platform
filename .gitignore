@@ -24,3 +24,6 @@ data/chroma_db/
 
 # Raw data (PDFs)
 data/
+
+# Editable install artifacts
+*.egg-info/

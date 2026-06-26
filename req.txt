@@ -2,3 +2,5 @@ pip install chromadb
 pip install sentence-transformers
 pip install pypdf
 pip install -e .
+pip install langchain-text-splitters
+pip install pytest
