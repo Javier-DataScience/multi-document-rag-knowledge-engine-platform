@@ -2,50 +2,66 @@
 # FILE: chunker.py
 #
 # PURPOSE:
-# Split long raw PDF text into smaller semantic chunks
-# for vector embedding and retrieval.
+# Split long documents into semantic chunks suitable for
+# vector embeddings and RAG retrieval.
 #
 # RESPONSIBILITY:
-# - Receive raw text
-# - Split into manageable chunks
-# - Maintain overlap for context preservation
+# - Preserve paragraphs and sentences when possible
+# - Maintain overlap between chunks
+# - Avoid breaking words in the middle
 #
 # INPUTS:
 # - Raw text extracted from PDFs
 #
 # OUTPUTS:
-# - List of text chunks
+# - List of semantic text chunks
 #
 # ARCHITECTURAL ROLE:
-# This is the core transformation step between ingestion
-# and vector storage in a RAG system.
+# This module forms the core transformation layer between
+# PDF ingestion and ChromaDB storage.
+#
+# DESIGN DECISION:
+# We use LangChain's RecursiveCharacterTextSplitter
+# because it is a production-standard chunking strategy
+# for RAG systems.
 # ==========================================================
 
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-def chunk_text(text: str, chunk_size: int = 500, overlap: int = 100):
+
+def chunk_text(
+    text: str,
+    chunk_size: int = 500,
+    chunk_overlap: int = 100,
+):
     """
-    Split text into overlapping chunks.
+    Split text into semantic chunks.
 
     Args:
-        text (str): Full document text
-        chunk_size (int): Maximum characters per chunk
-        overlap (int): Overlap between chunks for context continuity
+        text:
+            Raw document text.
+
+        chunk_size:
+            Maximum number of characters per chunk.
+
+        chunk_overlap:
+            Number of overlapping characters between chunks.
 
     Returns:
-        list[str]: List of text chunks
+        List[str]:
+            Semantic text chunks.
     """
 
-    chunks = []
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap,
+        separators=[
+            "\n\n",
+            "\n",
+            ". ",
+            " ",
+            "",
+        ],
+    )
 
-    start = 0
-
-    while start < len(text):
-        end = start + chunk_size
-
-        chunk = text[start:end]
-
-        chunks.append(chunk)
-
-        start = end - overlap
-
-    return chunks
+    return splitter.split_text(text)
