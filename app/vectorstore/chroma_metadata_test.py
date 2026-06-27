@@ -25,29 +25,18 @@ import chromadb
 
 client = chromadb.PersistentClient(path="./data/chroma_db")
 
-collection = client.get_or_create_collection(
-    name="metadata_collection"
-)
+collection = client.get_or_create_collection(name="metadata_collection")
 
 collection.add(
     documents=[
         "Supervised learning uses labeled data.",
-        "Neural networks are commonly used in deep learning."
+        "Neural networks are commonly used in deep learning.",
     ],
-    ids=[
-        "chunk_1",
-        "chunk_2"
-    ],
+    ids=["chunk_1", "chunk_2"],
     metadatas=[
-        {
-            "file_name": "ml_book.pdf",
-            "page": 5
-        },
-        {
-            "file_name": "deep_learning_book.pdf",
-            "page": 12
-        }
-    ]
+        {"file_name": "ml_book.pdf", "page": 5},
+        {"file_name": "deep_learning_book.pdf", "page": 12},
+    ],
 )
 
 print("Documents inserted successfully.")

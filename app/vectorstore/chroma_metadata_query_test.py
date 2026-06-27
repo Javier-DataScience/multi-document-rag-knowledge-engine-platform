@@ -25,9 +25,6 @@ client = chromadb.PersistentClient(path="./data/chroma_db")
 
 collection = client.get_collection("metadata_collection")
 
-results = collection.query(
-    query_texts=["What is supervised learning?"],
-    n_results=2
-)
+results = collection.query(query_texts=["What is supervised learning?"], n_results=2)
 
 print(results)

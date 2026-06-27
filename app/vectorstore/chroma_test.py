@@ -29,9 +29,7 @@ import chromadb
 
 client = chromadb.PersistentClient(path="./data/chroma_db")
 
-collection = client.get_or_create_collection(
-    name="test_collection"
-)
+collection = client.get_or_create_collection(name="test_collection")
 
 print("Collection created successfully.")
 print(f"Collection name: {collection.name}")

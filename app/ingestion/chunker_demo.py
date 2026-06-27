@@ -15,11 +15,7 @@ Deep learning is a subset of machine learning.
 It uses neural networks with many layers.
 """
 
-chunks = chunk_text(
-    sample_text,
-    chunk_size=80,
-    chunk_overlap=20
-)
+chunks = chunk_text(sample_text, chunk_size=80, chunk_overlap=20)
 
 for i, chunk in enumerate(chunks):
     print(f"\nCHUNK {i+1}:")

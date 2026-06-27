@@ -28,9 +28,7 @@ collection = client.get_collection("metadata_collection")
 results = collection.query(
     query_texts=["What is deep learning?"],
     n_results=2,
-    where={
-        "file_name": "deep_learning_book.pdf"
-    }
+    where={"file_name": "deep_learning_book.pdf"},
 )
 
 print(results)

@@ -44,9 +44,7 @@ def ingest_pdfs(pdf_folder: str = "./data"):
     # ------------------------------------------------------
     client = chromadb.PersistentClient(path="./data/chroma_db")
 
-    collection = client.get_or_create_collection(
-        name="knowledge_base"
-    )
+    collection = client.get_or_create_collection(name="knowledge_base")
 
     # ------------------------------------------------------
     # Load all PDFs
@@ -76,12 +74,7 @@ def ingest_pdfs(pdf_folder: str = "./data"):
             collection.add(
                 documents=[chunk],
                 ids=[chunk_id],
-                metadatas=[
-                    {
-                        "file_name": file_name,
-                        "chunk_id": index
-                    }
-                ]
+                metadatas=[{"file_name": file_name, "chunk_id": index}],
             )
 
             total_chunks += 1

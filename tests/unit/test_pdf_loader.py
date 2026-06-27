@@ -21,7 +21,6 @@
 
 from app.ingestion.pdf_loader import load_all_pdfs
 
-
 PDF_FOLDER = "./data"
 
 
@@ -62,7 +61,4 @@ def test_all_files_are_pdfs():
 
     pdfs = load_all_pdfs(PDF_FOLDER)
 
-    assert all(
-        filename.endswith(".pdf")
-        for filename in pdfs.keys()
-    )
+    assert all(filename.endswith(".pdf") for filename in pdfs.keys())

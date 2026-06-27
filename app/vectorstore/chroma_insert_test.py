@@ -23,19 +23,14 @@ import chromadb
 
 client = chromadb.PersistentClient(path="./data/chroma_db")
 
-collection = client.get_or_create_collection(
-    name="test_collection"
-)
+collection = client.get_or_create_collection(name="test_collection")
 
 collection.add(
     documents=[
         "Machine learning is a branch of artificial intelligence.",
-        "Deep learning is a subset of machine learning."
+        "Deep learning is a subset of machine learning.",
     ],
-    ids=[
-        "doc_1",
-        "doc_2"
-    ]
+    ids=["doc_1", "doc_2"],
 )
 
 print("Documents inserted successfully.")

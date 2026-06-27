@@ -27,26 +27,16 @@
 import chromadb
 
 
-def query_knowledge_base(
-    question: str,
-    top_k: int = 3
-):
+def query_knowledge_base(question: str, top_k: int = 3):
     """
     Retrieve the most relevant chunks from ChromaDB.
     """
 
-    client = chromadb.PersistentClient(
-        path="./data/chroma_db"
-    )
+    client = chromadb.PersistentClient(path="./data/chroma_db")
 
-    collection = client.get_collection(
-        name="knowledge_base"
-    )
+    collection = client.get_collection(name="knowledge_base")
 
-    results = collection.query(
-        query_texts=[question],
-        n_results=top_k
-    )
+    results = collection.query(query_texts=[question], n_results=top_k)
 
     return results
 
@@ -66,20 +56,11 @@ if __name__ == "__main__":
 
         print("\n----------------------------------")
 
-        print(
-            f"FILE: "
-            f"{results['metadatas'][0][i]['file_name']}"
-        )
+        print(f"FILE: " f"{results['metadatas'][0][i]['file_name']}")
 
-        print(
-            f"CHUNK: "
-            f"{results['metadatas'][0][i]['chunk_id']}"
-        )
+        print(f"CHUNK: " f"{results['metadatas'][0][i]['chunk_id']}")
 
-        print(
-            f"DISTANCE: "
-            f"{results['distances'][0][i]:.4f}"
-        )
+        print(f"DISTANCE: " f"{results['distances'][0][i]:.4f}")
 
         print("\nTEXT:")
 
