@@ -58,7 +58,7 @@ ANSWER:
 """
 
 
-def ask_rag(question: str) -> str:
+def ask_rag(question: str) -> dict:
     """
     Execute the complete RAG pipeline.
     """
@@ -69,4 +69,21 @@ def ask_rag(question: str) -> str:
 
     prompt = build_prompt(question, context)
 
-    return generate_response(prompt)
+    answer = generate_response(prompt)
+
+    metadata = results["metadatas"][0]
+
+    sources = []
+
+    for item in metadata:
+        sources.append(
+            {
+                "file_name": item["file_name"],
+                "chunk_id": item["chunk_id"],
+            }
+        )
+
+    return {
+        "answer": answer,
+        "sources": sources,
+    }

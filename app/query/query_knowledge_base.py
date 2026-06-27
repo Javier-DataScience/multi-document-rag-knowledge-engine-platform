@@ -43,7 +43,7 @@ def query_knowledge_base(question: str, top_k: int = 3):
 
 if __name__ == "__main__":
 
-    question = "What is deep learning?"
+    question = "Explain the relationship between machine learning and deep learning."
 
     results = query_knowledge_base(question)
 
