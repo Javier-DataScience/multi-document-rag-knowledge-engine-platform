@@ -65,15 +65,25 @@ def query_knowledge_base(
         n_results=10,
     )
 
-    documents = raw_results["documents"][0]
-    metadatas = raw_results["metadatas"][0]
-    distances = raw_results["distances"][0]
+    raw_documents = raw_results["documents"]
+    raw_metadatas = raw_results["metadatas"]
+    raw_distances = raw_results["distances"]
+
+    # ------------------------------------------------------
+    # ChromaDB may return None values.
+    # ------------------------------------------------------
+    if raw_documents is None or raw_metadatas is None or raw_distances is None:
+        raise ValueError("ChromaDB returned incomplete query results.")
+
+    documents = raw_documents[0]
+    metadatas = raw_metadatas[0]
+    distances = raw_distances[0]
 
     # ------------------------------------------------------
     # Keep track of how many chunks have been selected
     # from each document.
     # ------------------------------------------------------
-    document_counter = {}
+    document_counter: dict[str, int] = {}
 
     selected_documents = []
     selected_metadatas = []
@@ -85,7 +95,7 @@ def query_knowledge_base(
         distances,
     ):
 
-        file_name = metadata["file_name"]
+        file_name = str(metadata.get("file_name"))
 
         current_count = document_counter.get(file_name, 0)
 

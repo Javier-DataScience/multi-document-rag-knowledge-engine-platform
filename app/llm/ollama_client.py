@@ -43,4 +43,9 @@ def generate_response(
         ],
     )
 
-    return response["message"]["content"]
+    # ------------------------------------------------------
+    # Ollama returns values typed as Any.
+    # We explicitly convert the generated content to str
+    # so MyPy can verify the function contract.
+    # ------------------------------------------------------
+    return str(response["message"]["content"])
