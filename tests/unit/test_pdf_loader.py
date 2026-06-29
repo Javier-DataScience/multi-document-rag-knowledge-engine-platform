@@ -11,12 +11,23 @@
 # TEST STRATEGY:
 # - Ensure a dictionary is returned
 # - Ensure PDFs are detected
-# - Ensure extracted text is not empty
+# - Ensure pages are returned as lists
+# - Ensure extracted page text is not empty
 # - Ensure filenames end with .pdf
 #
 # ARCHITECTURAL ROLE:
 # PDF loading is the entry point of the entire RAG
 # pipeline. If ingestion fails, everything fails.
+#
+# NEW IMPROVEMENT:
+# The loader now preserves page boundaries and returns:
+#
+# {
+#     "document.pdf": [
+#         {"page": 1, "text": "..."},
+#         {"page": 2, "text": "..."},
+#     ]
+# }
 # ==========================================================
 
 from app.ingestion.pdf_loader import load_all_pdfs
@@ -44,14 +55,28 @@ def test_loader_finds_pdfs():
     assert len(pdfs) > 0
 
 
-def test_extracted_text_is_not_empty():
+def test_loader_returns_page_lists():
     """
-    Extracted PDF text should not be empty.
+    Every document should return a list of pages.
     """
 
     pdfs = load_all_pdfs(PDF_FOLDER)
 
-    assert all(text.strip() != "" for text in pdfs.values())
+    assert all(isinstance(pages, list) for pages in pdfs.values())
+
+
+def test_extracted_page_text_is_not_empty():
+    """
+    Every extracted page should contain non-empty text.
+    """
+
+    pdfs = load_all_pdfs(PDF_FOLDER)
+
+    for pages in pdfs.values():
+
+        for page in pages:
+
+            assert page["text"].strip() != ""
 
 
 def test_all_files_are_pdfs():

@@ -20,6 +20,10 @@
 # ARCHITECTURAL ROLE:
 # This module connects retrieval and generation while
 # keeping both systems independent.
+#
+# NEW IMPROVEMENT:
+# Source metadata now includes page numbers to enable
+# page-level citations in future UI and API layers.
 # ==========================================================
 
 from app.query.query_knowledge_base import query_knowledge_base
@@ -63,26 +67,46 @@ def ask_rag(question: str) -> dict:
     Execute the complete RAG pipeline.
     """
 
+    # ------------------------------------------------------
+    # Retrieve relevant chunks
+    # ------------------------------------------------------
     results = query_knowledge_base(question)
 
+    # ------------------------------------------------------
+    # Build context for the LLM
+    # ------------------------------------------------------
     context = build_context(results)
 
+    # ------------------------------------------------------
+    # Build the final prompt
+    # ------------------------------------------------------
     prompt = build_prompt(question, context)
 
+    # ------------------------------------------------------
+    # Generate the answer using Ollama
+    # ------------------------------------------------------
     answer = generate_response(prompt)
 
+    # ------------------------------------------------------
+    # Extract source metadata
+    # ------------------------------------------------------
     metadata = results["metadatas"][0]
 
     sources = []
 
     for item in metadata:
+
         sources.append(
             {
                 "file_name": item["file_name"],
+                "page_number": item["page_number"],
                 "chunk_id": item["chunk_id"],
             }
         )
 
+    # ------------------------------------------------------
+    # Return both answer and sources
+    # ------------------------------------------------------
     return {
         "answer": answer,
         "sources": sources,

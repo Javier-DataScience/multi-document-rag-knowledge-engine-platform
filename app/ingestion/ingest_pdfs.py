@@ -26,6 +26,10 @@
 #     knowledge_base
 #
 # Metadata is used to distinguish sources.
+#
+# NEW IMPROVEMENT:
+# Store page_number metadata to enable future
+# page-level citations.
 # ==========================================================
 
 import chromadb
@@ -56,28 +60,45 @@ def ingest_pdfs(pdf_folder: str = "./data"):
     # ------------------------------------------------------
     # Process every PDF
     # ------------------------------------------------------
-    for file_name, text in pdfs.items():
+    for file_name, pages in pdfs.items():
 
         print(f"\nProcessing: {file_name}")
 
-        chunks = chunk_text(text)
-
-        print(f"Chunks generated: {len(chunks)}")
+        global_chunk_index = 0
 
         # --------------------------------------------------
-        # Insert chunks
+        # Process every page independently
         # --------------------------------------------------
-        for index, chunk in enumerate(chunks):
+        for page_data in pages:
 
-            chunk_id = f"{file_name}_chunk_{index}"
+            page_number = page_data["page"]
+            page_text = page_data["text"]
 
-            collection.add(
-                documents=[chunk],
-                ids=[chunk_id],
-                metadatas=[{"file_name": file_name, "chunk_id": index}],
-            )
+            chunks = chunk_text(page_text)
 
-            total_chunks += 1
+            print(f"Page {page_number}: " f"{len(chunks)} chunks generated")
+
+            # ----------------------------------------------
+            # Insert chunks
+            # ----------------------------------------------
+            for chunk in chunks:
+
+                chunk_id = f"{file_name}_chunk_{global_chunk_index}"
+
+                collection.add(
+                    documents=[chunk],
+                    ids=[chunk_id],
+                    metadatas=[
+                        {
+                            "file_name": file_name,
+                            "chunk_id": global_chunk_index,
+                            "page_number": page_number,
+                        }
+                    ],
+                )
+
+                total_chunks += 1
+                global_chunk_index += 1
 
     print("\n===================================")
     print(f"Total chunks inserted: {total_chunks}")

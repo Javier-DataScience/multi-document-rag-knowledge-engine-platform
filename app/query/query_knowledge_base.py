@@ -135,6 +135,8 @@ if __name__ == "__main__":
 
         print(f"FILE: " f"{results['metadatas'][0][i]['file_name']}")
 
+        print(f"PAGE: " f"{results['metadatas'][0][i]['page_number']}")
+
         print(f"CHUNK: " f"{results['metadatas'][0][i]['chunk_id']}")
 
         print(f"DISTANCE: " f"{results['distances'][0][i]:.4f}")

@@ -17,7 +17,7 @@
 #
 # OUTPUTS:
 # - Generated answer.
-# - Source documents and chunk identifiers.
+# - Source documents, page numbers, and chunk identifiers.
 #
 # ARCHITECTURAL ROLE:
 # This file is ONLY for manual experimentation and
@@ -54,7 +54,8 @@ question = "How are machine learning and deep learning related?"
 
 # ----------------------------------------------------------
 # Execute the complete RAG pipeline.
-# The function now returns:
+#
+# The function returns:
 #
 # {
 #     "answer": "...",
@@ -84,4 +85,9 @@ print(result["answer"])
 print("\nSOURCES:\n")
 
 for source in result["sources"]:
-    print(f"- {source['file_name']} " f"(chunk {source['chunk_id']})")
+
+    print(
+        f"- {source['file_name']} "
+        f"(page {source['page_number']}, "
+        f"chunk {source['chunk_id']})"
+    )
