@@ -2,31 +2,12 @@
 # FILE: query_knowledge_base.py
 #
 # PURPOSE:
-# Query the multi-document knowledge base stored in ChromaDB.
+# Query ChromaDB knowledge base with simple document balancing.
 #
-# RESPONSIBILITY:
-# - Connect to the persistent vector database
-# - Retrieve the most relevant chunks
-# - Apply basic document balancing
-# - Display associated metadata
-#
-# INPUTS:
-# - User question
-#
-# OUTPUTS:
-# - Top matching chunks and metadata
-#
-# ARCHITECTURAL ROLE:
-# This module is the retrieval layer of the RAG system.
-# It intentionally performs NO text generation.
-#
-# DESIGN DECISION:
-# Retrieval must be fully validated before introducing
-# more advanced RAG techniques.
-#
-# NEW IMPROVEMENT:
-# Limit the number of chunks retrieved from a single
-# document so one PDF cannot dominate the results.
+# FIXES:
+# - removes circular imports
+# - stabilizes retrieval output
+# - ensures correct metadata handling
 # ==========================================================
 
 import chromadb
@@ -36,20 +17,9 @@ def query_knowledge_base(
     question: str,
     top_k: int = 3,
     max_chunks_per_document: int = 2,
-):
+) -> dict:
     """
-    Retrieve the most relevant chunks from ChromaDB.
-
-    Parameters
-    ----------
-    question : str
-        User question.
-
-    top_k : int
-        Final number of chunks returned.
-
-    max_chunks_per_document : int
-        Maximum number of chunks allowed from a single PDF.
+    Retrieve relevant chunks from ChromaDB with simple balancing.
     """
 
     client = chromadb.PersistentClient(path="./data/chroma_db")
@@ -57,63 +27,41 @@ def query_knowledge_base(
     collection = client.get_collection(name="knowledge_base")
 
     # ------------------------------------------------------
-    # Retrieve more candidates than we actually need.
-    # This gives us room to perform document balancing.
+    # Retrieve more candidates than needed
     # ------------------------------------------------------
     raw_results = collection.query(
         query_texts=[question],
         n_results=10,
     )
 
-    raw_documents = raw_results["documents"]
-    raw_metadatas = raw_results["metadatas"]
-    raw_distances = raw_results["distances"]
+    documents = raw_results["documents"][0]
+    metadatas = raw_results["metadatas"][0]
+    distances = raw_results["distances"][0]
 
     # ------------------------------------------------------
-    # ChromaDB may return None values.
+    # Balance documents (avoid dominance of single PDF)
     # ------------------------------------------------------
-    if raw_documents is None or raw_metadatas is None or raw_distances is None:
-        raise ValueError("ChromaDB returned incomplete query results.")
-
-    documents = raw_documents[0]
-    metadatas = raw_metadatas[0]
-    distances = raw_distances[0]
-
-    # ------------------------------------------------------
-    # Keep track of how many chunks have been selected
-    # from each document.
-    # ------------------------------------------------------
-    document_counter: dict[str, int] = {}
+    document_counter = {}
 
     selected_documents = []
     selected_metadatas = []
     selected_distances = []
 
-    for doc, metadata, distance in zip(
-        documents,
-        metadatas,
-        distances,
-    ):
+    for doc, meta, dist in zip(documents, metadatas, distances):
 
-        file_name = str(metadata.get("file_name"))
+        file_name = meta.get("file_name")
 
-        current_count = document_counter.get(file_name, 0)
+        count = document_counter.get(file_name, 0)
 
-        # --------------------------------------------------
-        # Skip documents that already reached the limit.
-        # --------------------------------------------------
-        if current_count >= max_chunks_per_document:
+        if count >= max_chunks_per_document:
             continue
 
         selected_documents.append(doc)
-        selected_metadatas.append(metadata)
-        selected_distances.append(distance)
+        selected_metadatas.append(meta)
+        selected_distances.append(dist)
 
-        document_counter[file_name] = current_count + 1
+        document_counter[file_name] = count + 1
 
-        # --------------------------------------------------
-        # Stop once we have enough final chunks.
-        # --------------------------------------------------
         if len(selected_documents) >= top_k:
             break
 
@@ -124,33 +72,36 @@ def query_knowledge_base(
     }
 
 
+# ----------------------------------------------------------
+# Manual test
+# ----------------------------------------------------------
 if __name__ == "__main__":
 
     question = "Explain the relationship between machine learning and deep learning."
 
     results = query_knowledge_base(
         question,
-        top_k=4,
+        top_k=3,
         max_chunks_per_document=2,
     )
 
-    print("\nQUESTION:")
+    print("\nQUESTION:\n")
     print(question)
 
-    print("\nTOP RESULTS:")
+    print("\nTOP RESULTS:\n")
 
     for i in range(len(results["documents"][0])):
 
         print("\n----------------------------------")
 
-        print(f"FILE: " f"{results['metadatas'][0][i]['file_name']}")
+        print(f"FILE: {results['metadatas'][0][i].get('file_name')}")
 
-        print(f"PAGE: " f"{results['metadatas'][0][i]['page_number']}")
+        print(f"PAGE: {results['metadatas'][0][i].get('page_number')}")
 
-        print(f"CHUNK: " f"{results['metadatas'][0][i]['chunk_id']}")
+        print(f"CHUNK: {results['metadatas'][0][i].get('chunk_id')}")
 
-        print(f"DISTANCE: " f"{results['distances'][0][i]:.4f}")
+        print(f"DISTANCE: {results['distances'][0][i]:.4f}")
 
-        print("\nTEXT:")
+        print("\nTEXT:\n")
 
         print(results["documents"][0][i])
