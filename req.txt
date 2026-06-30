@@ -7,3 +7,6 @@ pip install pytest
 pip install ollama
 pip install ruff black
 pip install mypy pre-commit
+pip install fastapi uvicorn
+pip install streamlit
+pip install gradio

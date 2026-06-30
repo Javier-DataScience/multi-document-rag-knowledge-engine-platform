@@ -8,7 +8,10 @@
 # - removes circular imports
 # - stabilizes retrieval output
 # - ensures correct metadata handling
+# - passes MyPy validation
 # ==========================================================
+
+from typing import Any
 
 import chromadb
 
@@ -17,7 +20,7 @@ def query_knowledge_base(
     question: str,
     top_k: int = 3,
     max_chunks_per_document: int = 2,
-) -> dict:
+) -> dict[str, Any]:
     """
     Retrieve relevant chunks from ChromaDB with simple balancing.
     """
@@ -34,6 +37,17 @@ def query_knowledge_base(
         n_results=10,
     )
 
+    if (
+        raw_results["documents"] is None
+        or raw_results["metadatas"] is None
+        or raw_results["distances"] is None
+    ):
+        return {
+            "documents": [[]],
+            "metadatas": [[]],
+            "distances": [[]],
+        }
+
     documents = raw_results["documents"][0]
     metadatas = raw_results["metadatas"][0]
     distances = raw_results["distances"][0]
@@ -41,15 +55,15 @@ def query_knowledge_base(
     # ------------------------------------------------------
     # Balance documents (avoid dominance of single PDF)
     # ------------------------------------------------------
-    document_counter = {}
+    document_counter: dict[str, int] = {}
 
-    selected_documents = []
-    selected_metadatas = []
-    selected_distances = []
+    selected_documents: list[str] = []
+    selected_metadatas: list[dict[str, Any]] = []
+    selected_distances: list[float] = []
 
     for doc, meta, dist in zip(documents, metadatas, distances):
 
-        file_name = meta.get("file_name")
+        file_name = str(meta.get("file_name", "unknown"))
 
         count = document_counter.get(file_name, 0)
 
@@ -57,7 +71,7 @@ def query_knowledge_base(
             continue
 
         selected_documents.append(doc)
-        selected_metadatas.append(meta)
+        selected_metadatas.append(dict(meta))
         selected_distances.append(dist)
 
         document_counter[file_name] = count + 1

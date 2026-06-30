@@ -11,21 +11,25 @@
 # 3. Send the prompt to Ollama.
 # 4. Return the generated answer + sources.
 #
-# IMPROVEMENT (Phase D step 1):
-# Context now includes:
-# - file name
-# - page number
-# - chunk id
+# CITATION UX CLEANUP:
+# - Metadata is still provided to the LLM for grounding.
+# - Raw SOURCE/PAGE/CHUNK lines are no longer expected
+#   in the final answer.
+# - The frontend (Streamlit/FastAPI) is now the single
+#   authoritative place where citations are displayed.
 # ==========================================================
 
-from app.query.query_knowledge_base import query_knowledge_base
 from app.llm.ollama_client import generate_response
+from app.query.query_knowledge_base import query_knowledge_base
 
 
 def build_context(results: dict) -> str:
     """
     Convert retrieved documents into a structured context string.
-    Now includes document metadata for better grounding.
+
+    Metadata is preserved for grounding, but formatted in a
+    cleaner way so the model focuses on answering rather than
+    repeating citations.
     """
 
     documents = results["documents"][0]
@@ -37,11 +41,12 @@ def build_context(results: dict) -> str:
 
         file_name = meta.get("file_name", "unknown_file")
         page_number = meta.get("page_number", "unknown_page")
-        chunk_id = meta.get("chunk_id", "unknown_chunk")
 
         formatted_chunk = f"""
-=== SOURCE DOCUMENT: {file_name} | PAGE: {page_number} | CHUNK: {chunk_id} ===
+Document: {file_name}
+Page: {page_number}
 
+Content:
 {doc}
 """.strip()
 
@@ -59,10 +64,20 @@ def build_prompt(question: str, context: str) -> str:
 You are a helpful assistant.
 
 Answer ONLY using the provided context.
-If the answer is not contained in the context,
-say: "I cannot answer from the provided documents."
 
-Use the sources to justify your answer.
+If the answer cannot be found in the context,
+respond exactly with:
+
+"I cannot answer from the provided documents."
+
+Do NOT invent information.
+
+Do NOT mention page numbers, chunk ids, file names,
+or source metadata in your final answer.
+
+The user interface will display citations separately.
+
+Provide a concise and well-structured explanation.
 
 CONTEXT:
 {context}
@@ -83,7 +98,10 @@ def ask_rag(question: str) -> dict:
 
     context = build_context(results)
 
-    prompt = build_prompt(question, context)
+    prompt = build_prompt(
+        question=question,
+        context=context,
+    )
 
     answer = generate_response(prompt)
 
@@ -92,6 +110,7 @@ def ask_rag(question: str) -> dict:
     sources = []
 
     for item in metadata:
+
         sources.append(
             {
                 "file_name": item["file_name"],

@@ -2,33 +2,16 @@
 # FILE: test_rag_pipeline.py
 #
 # PURPOSE:
-# Unit tests for the RAG orchestration layer.
-#
-# RESPONSIBILITY:
-# Verify the behavior of pure functions inside
-# rag_pipeline.py.
-#
-# NOTE:
-# We DO NOT test:
-# - Ollama
-# - ChromaDB
-# - End-to-end generation
-#
-# Those belong to integration tests.
-#
-# We ONLY test deterministic logic:
-# - Context construction
-# - Prompt construction
+# Unit tests for the RAG pipeline.
 # ==========================================================
 
-from app.llm.rag_pipeline import build_context
-from app.llm.rag_pipeline import build_prompt
+from app.llm.rag_pipeline import build_context, build_prompt
 
 
 def test_build_context_combines_documents():
     """
     Multiple retrieved documents should be joined
-    into a single context string.
+    into a single structured context string.
     """
 
     results = {
@@ -37,27 +20,51 @@ def test_build_context_combines_documents():
                 "Machine learning is a branch of AI.",
                 "Deep learning uses neural networks.",
             ]
-        ]
+        ],
+        "metadatas": [
+            [
+                {
+                    "file_name": "ml_book.pdf",
+                    "page_number": 1,
+                    "chunk_id": 0,
+                },
+                {
+                    "file_name": "deep_learning.pdf",
+                    "page_number": 2,
+                    "chunk_id": 1,
+                },
+            ]
+        ],
     }
 
     context = build_context(results)
 
-    assert "Machine learning" in context
-    assert "Deep learning" in context
-    assert "\n\n" in context
+    assert "Machine learning is a branch of AI." in context
+    assert "Deep learning uses neural networks." in context
+
+    assert "Document: ml_book.pdf" in context
+    assert "Document: deep_learning.pdf" in context
+
+    assert "Page: 1" in context
+    assert "Page: 2" in context
 
 
-def test_build_prompt_contains_context_and_question():
+def test_build_prompt_contains_question_and_context():
     """
-    The generated prompt must include both the
-    context and the user question.
+    The final prompt should include both
+    the user question and retrieved context.
     """
 
-    question = "What is deep learning?"
-    context = "Deep learning uses neural networks."
+    question = "What is machine learning?"
 
-    prompt = build_prompt(question, context)
+    context = "Machine learning is a branch of AI."
+
+    prompt = build_prompt(
+        question=question,
+        context=context,
+    )
 
     assert question in prompt
     assert context in prompt
+
     assert "ANSWER:" in prompt
