@@ -5,16 +5,17 @@
 # Streamlit frontend for the Multi-Document RAG system.
 #
 # RESPONSIBILITY:
-# - Collect user questions.
-# - Send requests to FastAPI.
-# - Display answers and sources.
+# - Upload multiple PDF documents.
+# - Ask questions through FastAPI.
+# - Display answers and citations.
 #
 # ARCHITECTURAL ROLE:
+#
 # User
 #   ↓
 # Streamlit UI
 #   ↓
-# FastAPI (/ask)
+# FastAPI
 #   ↓
 # RAG Pipeline
 #   ↓
@@ -23,9 +24,9 @@
 # DESIGN PRINCIPLES:
 # - Dark theme
 # - Bright text
-# - Minimal interface
+# - Large buttons
 # - Educational project
-# - No direct calls to the RAG internals
+# - FastAPI as intermediary layer
 # ==========================================================
 
 import requests
@@ -34,7 +35,9 @@ import streamlit as st
 # ----------------------------------------------------------
 # Configuration
 # ----------------------------------------------------------
-FASTAPI_URL = "http://127.0.0.1:8000/ask"
+ASK_API_URL = "http://127.0.0.1:8000/ask"
+
+UPLOAD_API_URL = "http://127.0.0.1:8000/upload_pdfs"
 
 
 # ----------------------------------------------------------
@@ -118,18 +121,83 @@ intermediary layer between the frontend and the RAG system.
 """)
 
 
-# ----------------------------------------------------------
-# User input
-# ----------------------------------------------------------
-question = st.text_input(
-    "Enter your question:",
-    placeholder="How are machine learning and deep learning related?",
+# ==========================================================
+# MULTI-PDF UPLOAD
+# ==========================================================
+st.header("Upload Documents")
+
+uploaded_files = st.file_uploader(
+    "Select one or more PDF files:",
+    type=["pdf"],
+    accept_multiple_files=True,
 )
 
 
-# ----------------------------------------------------------
-# Ask button
-# ----------------------------------------------------------
+if st.button(
+    "Upload PDFs",
+    use_container_width=True,
+):
+
+    if not uploaded_files:
+
+        st.warning("Please select at least one PDF file.")
+
+    else:
+
+        try:
+
+            files_payload = []
+
+            for uploaded_file in uploaded_files:
+
+                files_payload.append(
+                    (
+                        "files",
+                        (
+                            uploaded_file.name,
+                            uploaded_file.getvalue(),
+                            "application/pdf",
+                        ),
+                    )
+                )
+
+            response = requests.post(
+                UPLOAD_API_URL,
+                files=files_payload,
+                timeout=600,
+            )
+
+            response.raise_for_status()
+
+            result = response.json()
+
+            st.success(result["message"])
+
+            st.write("Uploaded files:")
+
+            for file_name in result["uploaded_files"]:
+
+                st.write(f"✓ {file_name}")
+
+        except Exception as error:
+
+            st.error(f"Upload failed: {error}")
+
+
+st.divider()
+
+
+# ==========================================================
+# QUESTION ANSWERING
+# ==========================================================
+st.header("Ask Questions")
+
+question = st.text_input(
+    "Enter your question:",
+    placeholder=("How are machine learning and " "deep learning related?"),
+)
+
+
 if st.button(
     "Ask",
     use_container_width=True,
@@ -146,7 +214,7 @@ if st.button(
             try:
 
                 response = requests.post(
-                    FASTAPI_URL,
+                    ASK_API_URL,
                     json={"question": question},
                     timeout=300,
                 )

@@ -2,39 +2,44 @@
 # FILE: gradio_app.py
 #
 # PURPOSE:
-# Gradio frontend for the Multi-Document RAG system.
+# Gradio frontend for Multi-Document RAG system.
 #
 # RESPONSIBILITY:
-# - Collect user questions.
-# - Send requests to FastAPI.
-# - Display answers and sources.
+# - Upload multiple PDFs
+# - Ask questions via FastAPI
+# - Display answers and sources
 #
-# ARCHITECTURAL ROLE:
+# ARCHITECTURE:
 #
 # User
 #   ↓
 # Gradio UI
 #   ↓
-# FastAPI (/ask)
+# FastAPI
 #   ↓
 # RAG Pipeline
 #   ↓
 # ChromaDB + Ollama
 #
-# DESIGN PRINCIPLES:
+# DESIGN:
 # - Dark theme
-# - Bright blue accents
-# - White text
-# - Minimal interface
-# - Educational project
+# - Bright blue UI
+# - Multi-file upload
 # ==========================================================
 
 import requests
 import gradio as gr
 
-FASTAPI_URL = "http://127.0.0.1:8000/ask"
+# ----------------------------------------------------------
+# API endpoints
+# ----------------------------------------------------------
+ASK_URL = "http://127.0.0.1:8000/ask"
+UPLOAD_URL = "http://127.0.0.1:8000/upload_pdfs"
 
 
+# ==========================================================
+# RAG QUESTION FUNCTION
+# ==========================================================
 def ask_question(question: str):
 
     if not question.strip():
@@ -43,7 +48,7 @@ def ask_question(question: str):
     try:
 
         response = requests.post(
-            FASTAPI_URL,
+            ASK_URL,
             json={"question": question},
             timeout=300,
         )
@@ -78,21 +83,73 @@ def ask_question(question: str):
         return f"Unexpected error: {error}", ""
 
 
-# ----------------------------------------------------------
-# Theme
-# ----------------------------------------------------------
+# ==========================================================
+# PDF UPLOAD FUNCTION (MULTI-FILE)
+# ==========================================================
+def upload_pdfs(files):
+
+    if not files:
+        return "Please upload at least one PDF file."
+
+    try:
+
+        files_payload = []
+
+        for file in files:
+
+            file_path = file.name  # IMPORTANT FIX
+
+            with open(file_path, "rb") as f:
+
+                files_payload.append(
+                    (
+                        "files",
+                        (
+                            (
+                                file_path.split("/")[-1]
+                                if "/" in file_path
+                                else file_path.split("\\")[-1]
+                            ),
+                            f.read(),
+                            "application/pdf",
+                        ),
+                    )
+                )
+
+        response = requests.post(
+            UPLOAD_URL,
+            files=files_payload,
+            timeout=600,
+        )
+
+        response.raise_for_status()
+
+        result = response.json()
+
+        uploaded = "\n".join([f"✓ {f}" for f in result["uploaded_files"]])
+
+        return result["message"] + "\n\n" + uploaded
+
+    except Exception as error:
+
+        return f"Upload failed: {error}"
+
+
+# ==========================================================
+# THEME
+# ==========================================================
 theme = gr.themes.Soft(
     primary_hue="blue",
     neutral_hue="slate",
 )
 
 
-# ----------------------------------------------------------
-# Interface
-# ----------------------------------------------------------
+# ==========================================================
+# GRADIO INTERFACE
+# ==========================================================
 with gr.Blocks(
     theme=theme,
-    title="Multi-Document RAG Knowledge Engine",
+    title="Multi-Document RAG Engine",
     css="""
     body {
         background-color: #0E1117;
@@ -103,41 +160,70 @@ with gr.Blocks(
         color: white !important;
     }
 
+    h1, h2, h3 {
+        color: #4DA6FF !important;
+        font-weight: 700 !important;
+    }
+
     button {
         background-color: #4DA6FF !important;
         color: white !important;
         font-weight: bold !important;
         border-radius: 10px !important;
         width: 100% !important;
+        padding: 10px !important;
     }
 
     button:hover {
         background-color: #2F8CFF !important;
     }
+
+    textarea, input {
+        background-color: #1A1F2B !important;
+        color: white !important;
+        border: 1px solid #333 !important;
+    }
     """,
 ) as demo:
 
+    # ------------------------------------------------------
+    # TITLE
+    # ------------------------------------------------------
     gr.Markdown("""
-    <h1 style="
-        color:#4DA6FF;
-        font-weight:700;
-        margin-bottom:20px;
-    ">
-        Multi-Document RAG Knowledge Engine
-    </h1>
+        # Multi-Document RAG Knowledge Engine
+        Ask questions or upload multiple PDF documents.
+        """)
 
-    <p style="
-        color:white;
-        font-size:16px;
-    ">
-        Ask questions about the documents stored in the
-        knowledge base.
+    # ------------------------------------------------------
+    # UPLOAD SECTION
+    # ------------------------------------------------------
+    gr.Markdown("## Upload PDFs")
 
-        The interface communicates with FastAPI, which acts
-        as an intermediary layer between the frontend and
-        the RAG system.
-    </p>
-    """)
+    file_input = gr.File(
+        file_count="multiple",
+        file_types=[".pdf"],
+        label="Select one or more PDF files",
+    )
+
+    upload_button = gr.Button("Upload PDFs")
+
+    upload_output = gr.Textbox(
+        label="Upload Status",
+        lines=5,
+    )
+
+    upload_button.click(
+        fn=upload_pdfs,
+        inputs=file_input,
+        outputs=upload_output,
+    )
+
+    gr.Markdown("---")
+
+    # ------------------------------------------------------
+    # QUESTION SECTION
+    # ------------------------------------------------------
+    gr.Markdown("## Ask Questions")
 
     question_box = gr.Textbox(
         label="Enter your question",
@@ -164,6 +250,9 @@ with gr.Blocks(
     )
 
 
+# ==========================================================
+# LAUNCH APP
+# ==========================================================
 if __name__ == "__main__":
 
     demo.launch(
