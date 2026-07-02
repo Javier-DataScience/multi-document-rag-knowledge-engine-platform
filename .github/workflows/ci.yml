@@ -5,31 +5,10 @@
 # Continuous Integration pipeline for the
 # Multi-Document RAG Knowledge Engine Platform.
 #
-# RESPONSIBILITY:
-# - Validate code formatting
-# - Run static analysis
-# - Perform type checking
-# - Execute unit tests
-#
-# PIPELINE:
-#
-# Push / Pull Request
-#         ↓
-# Install Dependencies
-#         ↓
-# Black
-#         ↓
-# Ruff
-#         ↓
-# MyPy
-#         ↓
-# Pytest
-#
-# DESIGN PRINCIPLES:
-# - Fast feedback
-# - Deterministic builds
-# - Reproducible environments
-# - Educational MLOps practices
+# NOTE:
+# CI executes only pure unit tests.
+# Integration tests requiring local PDFs, ChromaDB state,
+# or Ollama are executed locally.
 # ==========================================================
 
 name: CI
@@ -59,7 +38,6 @@ jobs:
       # Checkout repository
       # ------------------------------------------------------
       - name: Checkout repository
-
         uses: actions/checkout@v4
 
 
@@ -67,11 +45,8 @@ jobs:
       # Setup Python
       # ------------------------------------------------------
       - name: Setup Python
-
         uses: actions/setup-python@v5
-
         with:
-
           python-version: "3.10"
 
 
@@ -79,13 +54,9 @@ jobs:
       # Install dependencies
       # ------------------------------------------------------
       - name: Install dependencies
-
         run: |
-
           python -m pip install --upgrade pip
-
           pip install -r requirements.txt
-
           pip install types-requests
 
 
@@ -93,9 +64,7 @@ jobs:
       # Black
       # ------------------------------------------------------
       - name: Check formatting with Black
-
         run: |
-
           black --check .
 
 
@@ -103,9 +72,7 @@ jobs:
       # Ruff
       # ------------------------------------------------------
       - name: Run Ruff
-
         run: |
-
           ruff check .
 
 
@@ -113,21 +80,15 @@ jobs:
       # MyPy
       # ------------------------------------------------------
       - name: Run MyPy
-
         run: |
-
           mypy app ui_streamlit ui_gradio
 
 
       # ------------------------------------------------------
-      # Pytest
+      # Pytest (PURE UNIT TESTS ONLY)
       # ------------------------------------------------------
-      - name: Run tests
-
+      - name: Run unit tests
         env:
-
           PYTHONPATH: .
-
         run: |
-
-          pytest
+          pytest tests/unit/test_chunker.py tests/unit/test_rag_pipeline.py
