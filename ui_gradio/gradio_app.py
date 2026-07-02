@@ -87,8 +87,7 @@ def ask_question(question: str):
     except requests.exceptions.ConnectionError:
 
         return (
-            "Could not connect to FastAPI. "
-            "Make sure the API server is running.",
+            "Could not connect to FastAPI. " "Make sure the API server is running.",
             "",
         )
 
@@ -138,9 +137,7 @@ def upload_pdfs(files):
 
         result = response.json()
 
-        uploaded = "\n".join(
-            [f"✓ {f}" for f in result["uploaded_files"]]
-        )
+        uploaded = "\n".join([f"✓ {f}" for f in result["uploaded_files"]])
 
         return result["message"] + "\n\n" + uploaded
 
@@ -203,11 +200,13 @@ with gr.Blocks(
     # ------------------------------------------------------
     # TITLE
     # ------------------------------------------------------
-    gr.Markdown("""
+    gr.Markdown(
+        """
         # Multi-Document RAG Knowledge Engine
 
         Ask questions or upload multiple PDF documents.
-        """)
+        """
+    )
 
     # ------------------------------------------------------
     # UPLOAD SECTION
@@ -242,9 +241,7 @@ with gr.Blocks(
 
     question_box = gr.Textbox(
         label="Enter your question",
-        placeholder=(
-            "How are machine learning and deep learning related?"
-        ),
+        placeholder=("How are machine learning and deep learning related?"),
         lines=2,
     )
 

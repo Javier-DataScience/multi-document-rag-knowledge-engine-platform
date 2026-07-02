@@ -208,10 +208,7 @@ st.header("Ask Questions")
 
 question = st.text_input(
     "Enter your question:",
-    placeholder=(
-        "How are machine learning and "
-        "deep learning related?"
-    ),
+    placeholder=("How are machine learning and " "deep learning related?"),
 )
 
 
