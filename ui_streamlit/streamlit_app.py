@@ -38,7 +38,6 @@ import os
 import requests
 import streamlit as st
 
-
 # ----------------------------------------------------------
 # Configuration
 # ----------------------------------------------------------
@@ -125,14 +124,12 @@ st.markdown(
 # ----------------------------------------------------------
 st.title("Multi-Document RAG Knowledge Engine")
 
-st.write(
-    """
+st.write("""
 Ask questions about the documents stored in the knowledge base.
 
 The interface communicates with FastAPI, which acts as an
 intermediary layer between the frontend and the RAG system.
-"""
-)
+""")
 
 
 # ==========================================================

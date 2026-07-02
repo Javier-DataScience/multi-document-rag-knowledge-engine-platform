@@ -20,9 +20,41 @@
 # Retrieval logic must NOT live here.
 # Prompt engineering must NOT live here.
 # RAG orchestration must NOT live here.
+#
+# LOCAL MODE:
+# - Uses localhost:11434
+#
+# DOCKER MODE:
+# - Uses host.docker.internal:11434
+#
+# DESIGN PRINCIPLE:
+# Automatically support both execution environments so
+# this problem never reappears.
 # ==========================================================
 
+import os
+
 import ollama
+
+# ----------------------------------------------------------
+# Ollama host configuration
+# ----------------------------------------------------------
+#
+# If running inside Docker, docker-compose sets:
+#
+#     OLLAMA_HOST=http://host.docker.internal:11434
+#
+# Otherwise, local execution falls back to:
+#
+#     http://localhost:11434
+#
+# ----------------------------------------------------------
+OLLAMA_HOST = os.getenv(
+    "OLLAMA_HOST",
+    "http://localhost:11434",
+)
+
+OLLAMA_CLIENT = ollama.Client(host=OLLAMA_HOST)
 
 
 def generate_response(
@@ -33,7 +65,7 @@ def generate_response(
     Send a prompt to Ollama and return the generated text.
     """
 
-    response = ollama.chat(
+    response = OLLAMA_CLIENT.chat(
         model=model,
         messages=[
             {

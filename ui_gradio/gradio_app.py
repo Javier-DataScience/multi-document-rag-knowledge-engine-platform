@@ -36,7 +36,6 @@ import os
 import gradio as gr
 import requests
 
-
 # ----------------------------------------------------------
 # API endpoints
 # ----------------------------------------------------------
@@ -200,13 +199,11 @@ with gr.Blocks(
     # ------------------------------------------------------
     # TITLE
     # ------------------------------------------------------
-    gr.Markdown(
-        """
+    gr.Markdown("""
         # Multi-Document RAG Knowledge Engine
 
         Ask questions or upload multiple PDF documents.
-        """
-    )
+        """)
 
     # ------------------------------------------------------
     # UPLOAD SECTION
