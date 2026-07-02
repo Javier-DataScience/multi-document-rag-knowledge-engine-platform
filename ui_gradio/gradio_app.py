@@ -25,16 +25,29 @@
 # - Dark theme
 # - Bright blue UI
 # - Multi-file upload
+#
+# NEW IMPROVEMENT:
+# - Docker-compatible networking
+# - Local execution compatibility
 # ==========================================================
 
-import requests
+import os
+
 import gradio as gr
+import requests
+
 
 # ----------------------------------------------------------
 # API endpoints
 # ----------------------------------------------------------
-ASK_URL = "http://127.0.0.1:8000/ask"
-UPLOAD_URL = "http://127.0.0.1:8000/upload_pdfs"
+FASTAPI_BASE_URL = os.getenv(
+    "FASTAPI_URL",
+    "http://127.0.0.1:8000",
+)
+
+ASK_URL = f"{FASTAPI_BASE_URL}/ask"
+
+UPLOAD_URL = f"{FASTAPI_BASE_URL}/upload_pdfs"
 
 
 # ==========================================================
@@ -74,7 +87,8 @@ def ask_question(question: str):
     except requests.exceptions.ConnectionError:
 
         return (
-            "Could not connect to FastAPI. " "Make sure the API server is running.",
+            "Could not connect to FastAPI. "
+            "Make sure the API server is running.",
             "",
         )
 
@@ -97,19 +111,17 @@ def upload_pdfs(files):
 
         for file in files:
 
-            file_path = file.name  # IMPORTANT FIX
+            file_path = file.name
 
             with open(file_path, "rb") as f:
+
+                file_name = os.path.basename(file_path)
 
                 files_payload.append(
                     (
                         "files",
                         (
-                            (
-                                file_path.split("/")[-1]
-                                if "/" in file_path
-                                else file_path.split("\\")[-1]
-                            ),
+                            file_name,
                             f.read(),
                             "application/pdf",
                         ),
@@ -126,7 +138,9 @@ def upload_pdfs(files):
 
         result = response.json()
 
-        uploaded = "\n".join([f"✓ {f}" for f in result["uploaded_files"]])
+        uploaded = "\n".join(
+            [f"✓ {f}" for f in result["uploaded_files"]]
+        )
 
         return result["message"] + "\n\n" + uploaded
 
@@ -191,6 +205,7 @@ with gr.Blocks(
     # ------------------------------------------------------
     gr.Markdown("""
         # Multi-Document RAG Knowledge Engine
+
         Ask questions or upload multiple PDF documents.
         """)
 
@@ -227,7 +242,9 @@ with gr.Blocks(
 
     question_box = gr.Textbox(
         label="Enter your question",
-        placeholder=("How are machine learning and deep learning related?"),
+        placeholder=(
+            "How are machine learning and deep learning related?"
+        ),
         lines=2,
     )
 
@@ -256,6 +273,8 @@ with gr.Blocks(
 if __name__ == "__main__":
 
     demo.launch(
-        inbrowser=True,
+        server_name="0.0.0.0",
+        server_port=7860,
+        inbrowser=False,
         share=False,
     )

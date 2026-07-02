@@ -27,17 +27,29 @@
 # - Large buttons
 # - Educational project
 # - FastAPI as intermediary layer
+#
+# NEW IMPROVEMENT:
+# - Docker-compatible networking using environment variables.
+# - Local execution still works using 127.0.0.1.
 # ==========================================================
+
+import os
 
 import requests
 import streamlit as st
 
+
 # ----------------------------------------------------------
 # Configuration
 # ----------------------------------------------------------
-ASK_API_URL = "http://127.0.0.1:8000/ask"
+FASTAPI_BASE_URL = os.getenv(
+    "FASTAPI_URL",
+    "http://127.0.0.1:8000",
+)
 
-UPLOAD_API_URL = "http://127.0.0.1:8000/upload_pdfs"
+ASK_API_URL = f"{FASTAPI_BASE_URL}/ask"
+
+UPLOAD_API_URL = f"{FASTAPI_BASE_URL}/upload_pdfs"
 
 
 # ----------------------------------------------------------
@@ -113,12 +125,14 @@ st.markdown(
 # ----------------------------------------------------------
 st.title("Multi-Document RAG Knowledge Engine")
 
-st.write("""
+st.write(
+    """
 Ask questions about the documents stored in the knowledge base.
 
 The interface communicates with FastAPI, which acts as an
 intermediary layer between the frontend and the RAG system.
-""")
+"""
+)
 
 
 # ==========================================================
@@ -194,7 +208,10 @@ st.header("Ask Questions")
 
 question = st.text_input(
     "Enter your question:",
-    placeholder=("How are machine learning and " "deep learning related?"),
+    placeholder=(
+        "How are machine learning and "
+        "deep learning related?"
+    ),
 )
 
 
