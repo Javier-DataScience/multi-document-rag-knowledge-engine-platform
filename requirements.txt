@@ -1,21 +1,62 @@
+# ==========================================================
+# FILE: requirements.txt
+#
+# PURPOSE:
+# Dependencies for the Multi-Document RAG Knowledge
+# Engine Platform.
+#
+# COMPONENTS:
+# - FastAPI backend
+# - ChromaDB vector database
+# - Sentence Transformers embeddings
+# - Ollama LLM integration
+# - Streamlit frontend
+# - Gradio frontend
+# - Testing
+# - Linting
+# - Type checking
+# ==========================================================
+
+# ----------------------------------------------------------
+# RAG core
+# ----------------------------------------------------------
+chromadb
+sentence-transformers
+langchain-text-splitters
+pypdf
+ollama
+
+# ----------------------------------------------------------
+# API
+# ----------------------------------------------------------
 fastapi
 uvicorn
 
-chromadb
-sentence-transformers
-pypdf
-langchain-text-splitters
-
-requests
-python-multipart
-
+# ----------------------------------------------------------
+# Frontends
+# ----------------------------------------------------------
 streamlit
 gradio
 
+# ----------------------------------------------------------
+# HTTP client
+# ----------------------------------------------------------
+requests
+
+# ----------------------------------------------------------
+# Testing
+# ----------------------------------------------------------
 pytest
+
+# ----------------------------------------------------------
+# Code quality
+# ----------------------------------------------------------
 ruff
 black
 mypy
 pre-commit
 
-ollama
+# ----------------------------------------------------------
+# Type stubs
+# ----------------------------------------------------------
+types-requests

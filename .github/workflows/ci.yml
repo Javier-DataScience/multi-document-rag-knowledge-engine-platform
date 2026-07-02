@@ -1,0 +1,129 @@
+# ==========================================================
+# FILE: ci.yml
+#
+# PURPOSE:
+# Continuous Integration pipeline for the
+# Multi-Document RAG Knowledge Engine Platform.
+#
+# RESPONSIBILITY:
+# - Validate code formatting
+# - Run static analysis
+# - Perform type checking
+# - Execute unit tests
+#
+# PIPELINE:
+#
+# Push / Pull Request
+#         ↓
+# Install Dependencies
+#         ↓
+# Black
+#         ↓
+# Ruff
+#         ↓
+# MyPy
+#         ↓
+# Pytest
+#
+# DESIGN PRINCIPLES:
+# - Fast feedback
+# - Deterministic builds
+# - Reproducible environments
+# - Educational MLOps practices
+# ==========================================================
+
+name: CI
+
+on:
+
+  push:
+
+    branches:
+      - main
+
+  pull_request:
+
+    branches:
+      - main
+
+
+jobs:
+
+  quality-checks:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # ------------------------------------------------------
+      # Checkout repository
+      # ------------------------------------------------------
+      - name: Checkout repository
+
+        uses: actions/checkout@v4
+
+
+      # ------------------------------------------------------
+      # Setup Python
+      # ------------------------------------------------------
+      - name: Setup Python
+
+        uses: actions/setup-python@v5
+
+        with:
+
+          python-version: "3.10"
+
+
+      # ------------------------------------------------------
+      # Install dependencies
+      # ------------------------------------------------------
+      - name: Install dependencies
+
+        run: |
+
+          python -m pip install --upgrade pip
+
+          pip install -r requirements.txt
+
+          pip install types-requests
+
+
+      # ------------------------------------------------------
+      # Black
+      # ------------------------------------------------------
+      - name: Check formatting with Black
+
+        run: |
+
+          black --check .
+
+
+      # ------------------------------------------------------
+      # Ruff
+      # ------------------------------------------------------
+      - name: Run Ruff
+
+        run: |
+
+          ruff check .
+
+
+      # ------------------------------------------------------
+      # MyPy
+      # ------------------------------------------------------
+      - name: Run MyPy
+
+        run: |
+
+          mypy app ui_streamlit ui_gradio
+
+
+      # ------------------------------------------------------
+      # Pytest
+      # ------------------------------------------------------
+      - name: Run tests
+
+        run: |
+
+          pytest
