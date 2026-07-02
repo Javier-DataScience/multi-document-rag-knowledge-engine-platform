@@ -124,6 +124,10 @@ jobs:
       # ------------------------------------------------------
       - name: Run tests
 
+        env:
+
+          PYTHONPATH: .
+
         run: |
 
           pytest
